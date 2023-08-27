@@ -1,0 +1,14 @@
+.container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
+}
+
+.message {
+  color: darkred;
+  font-size: 36px;
+  background-color: lightgreen;
+  padding: 15px;
+}

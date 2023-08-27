@@ -1,0 +1,51 @@
+name: Deploy to Azure Container Registry
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          context: .
+          tags: prebenh/azure-container-app-hello-world:latest
+  deploy-azure:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+
+      - name: 'Run Azure CLI commands'
+        run: |
+          az containerapp up \
+            --name azure-container-app-hello-world \
+            --resource-group my-resource-group \
+            --location norwayeast \
+            --environment 'my-container-apps' \
+            --image prebenh/azure-container-app-hello-world:latest \
+            --target-port 80 \
+            --ingress external \
+            --query properties.configuration.ingress.fqdn
